@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#6b4423">
+<title>☕ Учёт ингредиентов</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #f5e6d3 0%, #e8d5b7 100%);
+    min-height: 100vh;
+    padding: 16px;
+    color: #3e2723;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #6b4423, #8b5a2b);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  header h1 { font-size: 22px; margin-bottom: 4px; }
+  header p { font-size: 13px; opacity: 0.9; }
+
+  .add-point {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .add-point input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #d4a574;
+    border-radius: 12px;
+    font-size: 15px;
+    background: white;
+    outline: none;
+  }
+  .add-point input:focus { border-color: #6b4423; }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  button:active { transform: scale(0.96); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #6b4423, #8b5a2b);
+    color: white;
+    padding: 12px 18px;
+    box-shadow: 0 2px 6px rgba(107,68,35,0.3);
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    color: white;
+    padding: 10px 14px;
+  }
+  .btn-small {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .point-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .point-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f5e6d3;
+  }
+  .point-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #6b4423;
+    flex: 1;
+  }
+
+  .ingredient {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background: #fdf8f3;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border-left: 4px solid #d4a574;
+  }
+  .ingredient.urgent { border-left-color: #e74c3c; background: #fdecea; }
+  .ingredient.soon { border-left-color: #f39c12; background: #fef5e7; }
+  .ingredient.ok { border-left-color: #27ae60; background: #eafaf1; }
+
+  .ing-info { flex: 1; }
+  .ing-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .ing-details { font-size: 12px; color: #666; }
+  .ing-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+    margin-top: 4px;
+    display: inline-block;
+  }
+  .status-urgent { background: #e74c3c; color: white; }
+  .status-soon { background: #f39c12; color: white; }
+  .status-ok { background: #27ae60; color: white; }
+
+  .edit-btn {
+    background: #8b5a2b;
+    color: white;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  /* Модальное окно */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .modal h3 {
+    color: #6b4423;
+    margin-bottom: 14px;
+    font-size: 17px;
+  }
+  .modal label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+  }
+  .modal input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #d4a574;
+    border-radius: 10px;
+    font-size: 15px;
+margin-bottom: 12px;
+    outline: none;
+  }
+  .modal input:focus { border-color: #6b4423; }
+  .modal-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .modal-buttons button { flex: 1; padding: 12px; }
+  .btn-cancel {
+    background: #ccc;
+    color: #333;
+  }
+
+  .reset-section {
+    text-align: center;
+    margin-top: 30px;
+    padding-bottom: 30px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8b6f47;
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+  .empty-state span { font-size: 50px; display: block; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>☕ Учёт ингредиентов</h1>
+  <p>Вендинговые точки</p>
+</header>
+
+<div class="add-point">
+  <input type="text" id="newPointName" placeholder="Название точки...">
+  <button class="btn-primary" onclick="addPoint()">+ Точка</button>
+</div>
+
+<div id="pointsList"></div>
+
+<div class="reset-section">
+  <button class="btn-danger" onclick="resetAll()">🗑 Сбросить все данные</button>
+</div>
+
+<!-- Модальное окно для редактирования -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3 id="modalTitle">Редактировать</h3>
+    <label>Количество пачек:</label>
+    <input type="number" id="modalQty" min="0" step="1">
+    <label>Дата последней поставки:</label>
+    <input type="date" id="modalDate">
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-primary" onclick="saveEdit()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const INGREDIENTS = [
+    { key: 'coffee', name: '☕ Кофе', unit: 'пачек по 1 кг' },
+    { key: 'milk', name: '🥛 Молоко', unit: 'пачек по 1 кг' },
+    { key: 'sugar', name: '🍬 Сахар', unit: 'пачек' },
+    { key: 'cups', name: '🥤 Стаканы', unit: 'упаковок' },
+    { key: 'chocolate', name: '🍫 Горячий шоколад', unit: 'пачек по 1 кг' },
+    { key: 'raf', name: '🍮 Раф', unit: 'пачек по 1 кг' }
+  ];
+
+  let points = JSON.parse(localStorage.getItem('vendingPoints') || '[]');
+  let editing = { pointId: null, ingKey: null };
+
+  function save() {
+    localStorage.setItem('vendingPoints', JSON.stringify(points));
+  }
+
+  function addPoint() {
+    const input = document.getElementById('newPointName');
+    const name = input.value.trim();
+    if (!name) {
+      alert('Введите название точки');
+      return;
+    }
+    const newPoint = {
+      id: Date.now(),
+      name: name,
+      ingredients: {}
+    };
+    INGREDIENTS.forEach(ing => {
+      newPoint.ingredients[ing.key] = { qty: 0, date: '' };
+    });
+    points.push(newPoint);
+    input.value = '';
+    save();
+    render();
+  }
+
+  function deletePoint(id) {
+    if (confirm('Удалить точку?')) {
+      points = points.filter(p => p.id !== id);
+      save();
+      render();
+    }
+  }
+
+  function openModal(pointId, ingKey) {
+    editing = { pointId, ingKey };
+    const point = points.find(p => p.id === pointId);
+    const ing = INGREDIENTS.find(i => i.key === ingKey);
+    document.getElementById('modalTitle').textContent = ing.name;
+    document.getElementById('modalQty').value = point.ingredients[ingKey].qty || 0;
+    document.getElementById('modalDate').value = point.ingredients[ingKey].date || new Date().toISOString().slice(0,10);
+    document.getElementById('editModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.remove('show');
+  }
+
+  function saveEdit() {
+    const point = points.find(p => p.id === editing.pointId);
+    const qty = parseInt(document.getElementById('modalQty').value) || 0;
+    const date = document.getElementById('modalDate').value;
+    point.ingredients[editing.ingKey] = { qty, date };
+    save();
+    closeModal();
+    render();
+  }
+
+  function getDaysSince(dateStr) {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const d = new Date(dateStr);
+    d.setHours(0,0,0,0);
+return Math.floor((today - d) / (1000*60*60*24));
+  }
+
+  function getStatus(days) {
+    if (days === null) return { cls: '', label: 'нет данных', tag: '' };
+    if (days < 3) return { cls: 'ok', label: 'нормально', tag: 'status-ok' };
+    if (days <= 7) return { cls: 'soon', label: 'скоро подвозить', tag: 'status-soon' };
+    return { cls: 'urgent', label: 'срочно!', tag: 'status-urgent' };
+  }
+
+  function render() {
+    const container = document.getElementById('pointsList');
+    if (points.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <span>📍</span>
+          <p>Нет добавленных точек.<br>Добавьте первую точку выше ☝️</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = points.map(point => `
+      <div class="point-card">
+        <div class="point-header">
+          <div class="point-name">📍 ${point.name}</div>
+          <button class="btn-danger btn-small" onclick="deletePoint(${point.id})">Удалить</button>
+        </div>
+        ${INGREDIENTS.map(ing => {
+          const data = point.ingredients[ing.key] || { qty: 0, date: '' };
+          const days = getDaysSince(data.date);
+          const status = getStatus(days);
+          const dateStr = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '—';
+          const daysStr = days !== null ? `${days} дн. назад` : 'не указано';
+          return `
+            <div class="ingredient ${status.cls}">
+              <div class="ing-info">
+                <div class="ing-name">${ing.name}</div>
+                <div class="ing-details">
+                  ${data.qty} ${ing.unit} • поставка: ${dateStr} (${daysStr})
+                </div>
+                ${data.date ? `<span class="ing-status ${status.tag}">${status.label}</span>` : ''}
+              </div>
+              <button class="edit-btn" onclick="openModal(${point.id}, '${ing.key}')">✏️</button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `).join('');
+  }
+
+  function resetAll() {
+    if (confirm('⚠️ Точно сбросить ВСЕ данные? Это действие нельзя отменить!')) {
+      if (confirm('Вы уверены? Все точки и поставки будут удалены.')) {
+        points = [];
+        localStorage.removeItem('vendingPoints');
+        render();
+      }
+    }
+  }
+
+  // Закрытие модалки по клику вне окна
+  document.getElementById('editModal').addEventListener('click', (e) => {
+    if (e.target.id === 'editModal') closeModal();
+  });
+
+  render();
+</script>
+
+</body>
+</html>

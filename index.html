@@ -509,3 +509,34 @@
                 <div class="ing-details">Посл. поставка: <b>${data.qty}</b> ${ing.unit} • ${dateStr} (${daysStr})</div>
                 ${data.date ? `<span class="ing-status ${status.tag}">${status.label}</span>` : ''}
 
+                  </div>
+              <button class="edit-btn" onclick="openModal(${point.id}, '${ing.key}')">✏️</button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `).join('');
+  }
+
+  function resetAll() {
+    if (confirm('⚠️ Точно сбросить ВСЕ данные? Это действие нельзя отменить!')) {
+      if (confirm('Вы уверены? Все точки и поставки будут удалены.')) {
+        points = [];
+        localStorage.removeItem('vendingPoints');
+        render();
+      }
+    }
+  }
+
+  // Закрытие модалки по клику вне окна
+  document.getElementById('editModal').addEventListener('click', (e) => {
+    if (e.target.id === 'editModal') closeModal();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
+
+

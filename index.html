@@ -1,377 +1,399 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#6b4423">
-<title>☕ Учёт ингредиентов</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #f5e6d3 0%, #e8d5b7 100%);
-    min-height: 100vh;
-    padding: 16px;
-    color: #3e2723;
-  }
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: linear-gradient(135deg, #6b4423, #8b5a2b);
-    border-radius: 16px;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  header h1 { font-size: 22px; margin-bottom: 4px; }
-  header p { font-size: 13px; opacity: 0.9; }
-
-  .add-point {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-  .add-point input {
-    flex: 1;
-    padding: 12px;
-    border: 2px solid #d4a574;
-    border-radius: 12px;
-    font-size: 15px;
-    background: white;
-    outline: none;
-  }
-  .add-point input:focus { border-color: #6b4423; }
-
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    transition: transform 0.1s, box-shadow 0.2s;
-  }
-  button:active { transform: scale(0.96); }
-
-  .btn-primary {
-    background: linear-gradient(135deg, #6b4423, #8b5a2b);
-    color: white;
-    padding: 12px 18px;
-    box-shadow: 0 2px 6px rgba(107,68,35,0.3);
-  }
-  .btn-danger {
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
-    color: white;
-    padding: 10px 14px;
-  }
-  .btn-small {
-    padding: 6px 10px;
-    font-size: 13px;
-  }
-
-  .point-card {
-    background: white;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  }
-  .point-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #f5e6d3;
-  }
-  .point-name {
-    font-size: 18px;
-    font-weight: 700;
-    color: #6b4423;
-    flex: 1;
-  }
-
-  .ingredient {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-    background: #fdf8f3;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    border-left: 4px solid #d4a574;
-  }
-  .ingredient.urgent { border-left-color: #e74c3c; background: #fdecea; }
-  .ingredient.soon { border-left-color: #f39c12; background: #fef5e7; }
-  .ingredient.ok { border-left-color: #27ae60; background: #eafaf1; }
-
-  .ing-info { flex: 1; }
-  .ing-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-  .ing-details { font-size: 12px; color: #666; }
-  .ing-status {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 8px;
-    margin-top: 4px;
-    display: inline-block;
-  }
-  .status-urgent { background: #e74c3c; color: white; }
-  .status-soon { background: #f39c12; color: white; }
-  .status-ok { background: #27ae60; color: white; }
-
-  .edit-btn {
-    background: #8b5a2b;
-    color: white;
-    padding: 8px 12px;
-    font-size: 12px;
-    border-radius: 8px;
-  }
-
-  /* Модальное окно */
-  .modal-bg {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-  .modal-bg.show { display: flex; }
-  .modal {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    width: 100%;
-    max-width: 360px;
-  }
-  .modal h3 {
-    color: #6b4423;
-    margin-bottom: 14px;
-    font-size: 17px;
-  }
-  .modal label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #555;
-  }
-  .modal input {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #d4a574;
-    border-radius: 10px;
-    font-size: 15px;
-margin-bottom: 12px;
-    outline: none;
-  }
-  .modal input:focus { border-color: #6b4423; }
-  .modal-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-  }
-  .modal-buttons button { flex: 1; padding: 12px; }
-  .btn-cancel {
-    background: #ccc;
-    color: #333;
-  }
-
-  .reset-section {
-    text-align: center;
-    margin-top: 30px;
-    padding-bottom: 30px;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #8b6f47;
-    background: white;
-    border-radius: 16px;
-    margin-bottom: 20px;
-  }
-  .empty-state span { font-size: 50px; display: block; margin-bottom: 10px; }
-</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="1894.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000; min-height: 14.0px}
+    span.s1 {font-kerning: none}
+    span.s2 {font: 12.0px 'Apple Color Emoji'; font-kerning: none}
+  </style>
 </head>
 <body>
-
-<header>
-  <h1>☕ Учёт ингредиентов</h1>
-  <p>Вендинговые точки</p>
-</header>
-
-<div class="add-point">
-  <input type="text" id="newPointName" placeholder="Название точки...">
-  <button class="btn-primary" onclick="addPoint()">+ Точка</button>
-</div>
-
-<div id="pointsList"></div>
-
-<div class="reset-section">
-  <button class="btn-danger" onclick="resetAll()">🗑 Сбросить все данные</button>
-</div>
-
-<!-- Модальное окно для редактирования -->
-<div class="modal-bg" id="editModal">
-  <div class="modal">
-    <h3 id="modalTitle">Редактировать</h3>
-    <label>Количество пачек:</label>
-    <input type="number" id="modalQty" min="0" step="1">
-    <label>Дата последней поставки:</label>
-    <input type="date" id="modalDate">
-    <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
-      <button class="btn-primary" onclick="saveEdit()">Сохранить</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const INGREDIENTS = [
-    { key: 'coffee', name: '☕ Кофе', unit: 'пачек по 1 кг' },
-    { key: 'milk', name: '🥛 Молоко', unit: 'пачек по 1 кг' },
-    { key: 'sugar', name: '🍬 Сахар', unit: 'пачек' },
-    { key: 'cups', name: '🥤 Стаканы', unit: 'упаковок' },
-    { key: 'chocolate', name: '🍫 Горячий шоколад', unit: 'пачек по 1 кг' },
-    { key: 'raf', name: '🍮 Раф', unit: 'пачек по 1 кг' }
-  ];
-
-  let points = JSON.parse(localStorage.getItem('vendingPoints') || '[]');
-  let editing = { pointId: null, ingKey: null };
-
-  function save() {
-    localStorage.setItem('vendingPoints', JSON.stringify(points));
-  }
-
-  function addPoint() {
-    const input = document.getElementById('newPointName');
-    const name = input.value.trim();
-    if (!name) {
-      alert('Введите название точки');
-      return;
-    }
-    const newPoint = {
-      id: Date.now(),
-      name: name,
-      ingredients: {}
-    };
-    INGREDIENTS.forEach(ing => {
-      newPoint.ingredients[ing.key] = { qty: 0, date: '' };
-    });
-    points.push(newPoint);
-    input.value = '';
-    save();
-    render();
-  }
-
-  function deletePoint(id) {
-    if (confirm('Удалить точку?')) {
-      points = points.filter(p => p.id !== id);
-      save();
-      render();
-    }
-  }
-
-  function openModal(pointId, ingKey) {
-    editing = { pointId, ingKey };
-    const point = points.find(p => p.id === pointId);
-    const ing = INGREDIENTS.find(i => i.key === ingKey);
-    document.getElementById('modalTitle').textContent = ing.name;
-    document.getElementById('modalQty').value = point.ingredients[ingKey].qty || 0;
-    document.getElementById('modalDate').value = point.ingredients[ingKey].date || new Date().toISOString().slice(0,10);
-    document.getElementById('editModal').classList.add('show');
-  }
-
-  function closeModal() {
-    document.getElementById('editModal').classList.remove('show');
-  }
-
-  function saveEdit() {
-    const point = points.find(p => p.id === editing.pointId);
-    const qty = parseInt(document.getElementById('modalQty').value) || 0;
-    const date = document.getElementById('modalDate').value;
-    point.ingredients[editing.ingKey] = { qty, date };
-    save();
-    closeModal();
-    render();
-  }
-
-  function getDaysSince(dateStr) {
-    if (!dateStr) return null;
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const d = new Date(dateStr);
-    d.setHours(0,0,0,0);
-return Math.floor((today - d) / (1000*60*60*24));
-  }
-
-  function getStatus(days) {
-    if (days === null) return { cls: '', label: 'нет данных', tag: '' };
-    if (days < 3) return { cls: 'ok', label: 'нормально', tag: 'status-ok' };
-    if (days <= 7) return { cls: 'soon', label: 'скоро подвозить', tag: 'status-soon' };
-    return { cls: 'urgent', label: 'срочно!', tag: 'status-urgent' };
-  }
-
-  function render() {
-    const container = document.getElementById('pointsList');
-    if (points.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <span>📍</span>
-          <p>Нет добавленных точек.<br>Добавьте первую точку выше ☝️</p>
-        </div>`;
-      return;
-    }
-
-    container.innerHTML = points.map(point => `
-      <div class="point-card">
-        <div class="point-header">
-          <div class="point-name">📍 ${point.name}</div>
-          <button class="btn-danger btn-small" onclick="deletePoint(${point.id})">Удалить</button>
-        </div>
-        ${INGREDIENTS.map(ing => {
-          const data = point.ingredients[ing.key] || { qty: 0, date: '' };
-          const days = getDaysSince(data.date);
-          const status = getStatus(days);
-          const dateStr = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '—';
-          const daysStr = days !== null ? `${days} дн. назад` : 'не указано';
-          return `
-            <div class="ingredient ${status.cls}">
-              <div class="ing-info">
-                <div class="ing-name">${ing.name}</div>
-                <div class="ing-details">
-                  ${data.qty} ${ing.unit} • поставка: ${dateStr} (${daysStr})
-                </div>
-                ${data.date ? `<span class="ing-status ${status.tag}">${status.label}</span>` : ''}
-              </div>
-              <button class="edit-btn" onclick="openModal(${point.id}, '${ing.key}')">✏️</button>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `).join('');
-  }
-
-  function resetAll() {
-    if (confirm('⚠️ Точно сбросить ВСЕ данные? Это действие нельзя отменить!')) {
-      if (confirm('Вы уверены? Все точки и поставки будут удалены.')) {
-        points = [];
-        localStorage.removeItem('vendingPoints');
-        render();
-      }
-    }
-  }
-
-  // Закрытие модалки по клику вне окна
-  document.getElementById('editModal').addEventListener('click', (e) => {
-    if (e.target.id === 'editModal') closeModal();
-  });
-
-  render();
-</script>
-
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="ru"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta name="theme-color" content="#6b4423"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;title&gt;</span><span class="s2">☕</span><span class="s1"> Учёт ингредиентов&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1">&lt;style&gt;</span></p>
+<p class="p1"><span class="s1">  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }</span></p>
+<p class="p1"><span class="s1">  body {</span></p>
+<p class="p1"><span class="s1">    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;</span></p>
+<p class="p1"><span class="s1">    background: linear-gradient(135deg, #f5e6d3 0%, #e8d5b7 100%);</span></p>
+<p class="p1"><span class="s1">    min-height: 100vh;</span></p>
+<p class="p1"><span class="s1">    padding: 16px;</span></p>
+<p class="p1"><span class="s1">    color: #3e2723;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  header {</span></p>
+<p class="p1"><span class="s1">    text-align: center;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 20px;</span></p>
+<p class="p1"><span class="s1">    padding: 16px;</span></p>
+<p class="p1"><span class="s1">    background: linear-gradient(135deg, #6b4423, #8b5a2b);</span></p>
+<p class="p1"><span class="s1">    border-radius: 16px;</span></p>
+<p class="p1"><span class="s1">    color: white;</span></p>
+<p class="p1"><span class="s1">    box-shadow: 0 4px 12px rgba(0,0,0,0.15);</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  header h1 { font-size: 22px; margin-bottom: 4px; }</span></p>
+<p class="p1"><span class="s1">  header p { font-size: 13px; opacity: 0.9; }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .add-point {</span></p>
+<p class="p1"><span class="s1">    display: flex;</span></p>
+<p class="p1"><span class="s1">    gap: 8px;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 20px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .add-point input {</span></p>
+<p class="p1"><span class="s1">    flex: 1;</span></p>
+<p class="p1"><span class="s1">    padding: 12px;</span></p>
+<p class="p1"><span class="s1">    border: 2px solid #d4a574;</span></p>
+<p class="p1"><span class="s1">    border-radius: 12px;</span></p>
+<p class="p1"><span class="s1">    font-size: 15px;</span></p>
+<p class="p1"><span class="s1">    background: white;</span></p>
+<p class="p1"><span class="s1">    outline: none;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .add-point input:focus { border-color: #6b4423; }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  button {</span></p>
+<p class="p1"><span class="s1">    cursor: pointer;</span></p>
+<p class="p1"><span class="s1">    border: none;</span></p>
+<p class="p1"><span class="s1">    border-radius: 12px;</span></p>
+<p class="p1"><span class="s1">    font-size: 15px;</span></p>
+<p class="p1"><span class="s1">    font-weight: 600;</span></p>
+<p class="p1"><span class="s1">    transition: transform 0.1s, box-shadow 0.2s;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  button:active { transform: scale(0.96); }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .btn-primary {</span></p>
+<p class="p1"><span class="s1">    background: linear-gradient(135deg, #6b4423, #8b5a2b);</span></p>
+<p class="p1"><span class="s1">    color: white;</span></p>
+<p class="p1"><span class="s1">    padding: 12px 18px;</span></p>
+<p class="p1"><span class="s1">    box-shadow: 0 2px 6px rgba(107,68,35,0.3);</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .btn-danger {</span></p>
+<p class="p1"><span class="s1">    background: linear-gradient(135deg, #c0392b, #e74c3c);</span></p>
+<p class="p1"><span class="s1">    color: white;</span></p>
+<p class="p1"><span class="s1">    padding: 10px 14px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .btn-small {</span></p>
+<p class="p1"><span class="s1">    padding: 6px 10px;</span></p>
+<p class="p1"><span class="s1">    font-size: 13px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .point-card {</span></p>
+<p class="p1"><span class="s1">    background: white;</span></p>
+<p class="p1"><span class="s1">    border-radius: 16px;</span></p>
+<p class="p1"><span class="s1">    padding: 16px;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 16px;</span></p>
+<p class="p1"><span class="s1">    box-shadow: 0 2px 10px rgba(0,0,0,0.08);</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .point-header {</span></p>
+<p class="p1"><span class="s1">    display: flex;</span></p>
+<p class="p1"><span class="s1">    justify-content: space-between;</span></p>
+<p class="p1"><span class="s1">    align-items: center;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 14px;</span></p>
+<p class="p1"><span class="s1">    padding-bottom: 12px;</span></p>
+<p class="p1"><span class="s1">    border-bottom: 2px solid #f5e6d3;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .point-name {</span></p>
+<p class="p1"><span class="s1">    font-size: 18px;</span></p>
+<p class="p1"><span class="s1">    font-weight: 700;</span></p>
+<p class="p1"><span class="s1">    color: #6b4423;</span></p>
+<p class="p1"><span class="s1">    flex: 1;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .ingredient {</span></p>
+<p class="p1"><span class="s1">    display: flex;</span></p>
+<p class="p1"><span class="s1">    align-items: center;</span></p>
+<p class="p1"><span class="s1">    justify-content: space-between;</span></p>
+<p class="p1"><span class="s1">    padding: 10px;</span></p>
+<p class="p1"><span class="s1">    background: #fdf8f3;</span></p>
+<p class="p1"><span class="s1">    border-radius: 10px;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 8px;</span></p>
+<p class="p1"><span class="s1">    border-left: 4px solid #d4a574;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .ingredient.urgent { border-left-color: #e74c3c; background: #fdecea; }</span></p>
+<p class="p1"><span class="s1">  .ingredient.soon { border-left-color: #f39c12; background: #fef5e7; }</span></p>
+<p class="p1"><span class="s1">  .ingredient.ok { border-left-color: #27ae60; background: #eafaf1; }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .ing-info { flex: 1; }</span></p>
+<p class="p1"><span class="s1">  .ing-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }</span></p>
+<p class="p1"><span class="s1">  .ing-details { font-size: 12px; color: #666; }</span></p>
+<p class="p1"><span class="s1">  .ing-status {</span></p>
+<p class="p1"><span class="s1">    font-size: 11px;</span></p>
+<p class="p1"><span class="s1">    font-weight: 700;</span></p>
+<p class="p1"><span class="s1">    padding: 3px 8px;</span></p>
+<p class="p1"><span class="s1">    border-radius: 8px;</span></p>
+<p class="p1"><span class="s1">    margin-top: 4px;</span></p>
+<p class="p1"><span class="s1">    display: inline-block;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .status-urgent { background: #e74c3c; color: white; }</span></p>
+<p class="p1"><span class="s1">  .status-soon { background: #f39c12; color: white; }</span></p>
+<p class="p1"><span class="s1">  .status-ok { background: #27ae60; color: white; }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .edit-btn {</span></p>
+<p class="p1"><span class="s1">    background: #8b5a2b;</span></p>
+<p class="p1"><span class="s1">    color: white;</span></p>
+<p class="p1"><span class="s1">    padding: 8px 12px;</span></p>
+<p class="p1"><span class="s1">    font-size: 12px;</span></p>
+<p class="p1"><span class="s1">    border-radius: 8px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  /* Модальное окно */</span></p>
+<p class="p1"><span class="s1">  .modal-bg {</span></p>
+<p class="p1"><span class="s1">    display: none;</span></p>
+<p class="p1"><span class="s1">    position: fixed;</span></p>
+<p class="p1"><span class="s1">    top: 0; left: 0; right: 0; bottom: 0;</span></p>
+<p class="p1"><span class="s1">    background: rgba(0,0,0,0.5);</span></p>
+<p class="p1"><span class="s1">    z-index: 100;</span></p>
+<p class="p1"><span class="s1">    align-items: center;</span></p>
+<p class="p1"><span class="s1">    justify-content: center;</span></p>
+<p class="p1"><span class="s1">    padding: 16px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .modal-bg.show { display: flex; }</span></p>
+<p class="p1"><span class="s1">  .modal {</span></p>
+<p class="p1"><span class="s1">    background: white;</span></p>
+<p class="p1"><span class="s1">    border-radius: 16px;</span></p>
+<p class="p1"><span class="s1">    padding: 20px;</span></p>
+<p class="p1"><span class="s1">    width: 100%;</span></p>
+<p class="p1"><span class="s1">    max-width: 360px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .modal h3 {</span></p>
+<p class="p1"><span class="s1">    color: #6b4423;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 14px;</span></p>
+<p class="p1"><span class="s1">    font-size: 17px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .modal label {</span></p>
+<p class="p1"><span class="s1">    display: block;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 6px;</span></p>
+<p class="p1"><span class="s1">    font-size: 13px;</span></p>
+<p class="p1"><span class="s1">    font-weight: 600;</span></p>
+<p class="p1"><span class="s1">    color: #555;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .modal input {</span></p>
+<p class="p1"><span class="s1">    width: 100%;</span></p>
+<p class="p1"><span class="s1">    padding: 12px;</span></p>
+<p class="p1"><span class="s1">    border: 2px solid #d4a574;</span></p>
+<p class="p1"><span class="s1">    border-radius: 10px;</span></p>
+<p class="p1"><span class="s1">    font-size: 15px;</span></p>
+<p class="p1"><span class="s1">margin-bottom: 12px;</span></p>
+<p class="p1"><span class="s1">    outline: none;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .modal input:focus { border-color: #6b4423; }</span></p>
+<p class="p1"><span class="s1">  .modal-buttons {</span></p>
+<p class="p1"><span class="s1">    display: flex;</span></p>
+<p class="p1"><span class="s1">    gap: 8px;</span></p>
+<p class="p1"><span class="s1">    margin-top: 8px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .modal-buttons button { flex: 1; padding: 12px; }</span></p>
+<p class="p1"><span class="s1">  .btn-cancel {</span></p>
+<p class="p1"><span class="s1">    background: #ccc;</span></p>
+<p class="p1"><span class="s1">    color: #333;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .reset-section {</span></p>
+<p class="p1"><span class="s1">    text-align: center;</span></p>
+<p class="p1"><span class="s1">    margin-top: 30px;</span></p>
+<p class="p1"><span class="s1">    padding-bottom: 30px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  .empty-state {</span></p>
+<p class="p1"><span class="s1">    text-align: center;</span></p>
+<p class="p1"><span class="s1">    padding: 40px 20px;</span></p>
+<p class="p1"><span class="s1">    color: #8b6f47;</span></p>
+<p class="p1"><span class="s1">    background: white;</span></p>
+<p class="p1"><span class="s1">    border-radius: 16px;</span></p>
+<p class="p1"><span class="s1">    margin-bottom: 20px;</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p1"><span class="s1">  .empty-state span { font-size: 50px; display: block; margin-bottom: 10px; }</span></p>
+<p class="p1"><span class="s1">&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;header&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;h1&gt;</span><span class="s2">☕</span><span class="s1"> Учёт ингредиентов&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;p&gt;Вендинговые точки&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/header&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;div class="add-point"&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;input type="text" id="newPointName" placeholder="Название точки..."&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;button class="btn-primary" onclick="addPoint()"&gt;+ Точка&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;div id="pointsList"&gt;&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;div class="reset-section"&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;button class="btn-danger" onclick="resetAll()"&gt;</span><span class="s2">🗑</span><span class="s1"> Сбросить все данные&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;!-- Модальное окно для редактирования --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="modal-bg" id="editModal"&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;div class="modal"&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;h3 id="modalTitle"&gt;Редактировать&lt;/h3&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;label&gt;Количество пачек:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;input type="number" id="modalQty" min="0" step="1"&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;label&gt;Дата последней поставки:&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;input type="date" id="modalDate"&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;div class="modal-buttons"&gt;</span></p>
+<p class="p1"><span class="s1">      &lt;button class="btn-cancel" onclick="closeModal()"&gt;Отмена&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">      &lt;button class="btn-primary" onclick="saveEdit()"&gt;Сохранить&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">    &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">  &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"> const INGREDIENTS = [</span></p>
+<p class="p1"><span class="s1">    { key: 'coffee',    name: '</span><span class="s2">☕</span><span class="s1"> Кофе',                       unit: 'пачек по 1 кг' },</span></p>
+<p class="p1"><span class="s1">    { key: 'milk',      name: '</span><span class="s2">🥛</span><span class="s1"> Молоко',                     unit: 'пачек по 1 кг' },</span></p>
+<p class="p1"><span class="s1">    { key: 'chocolate', name: '</span><span class="s2">🍫</span><span class="s1"> Горячий шоколад',            unit: 'пачек по 1 кг' },</span></p>
+<p class="p1"><span class="s1">    { key: 'raf',       name: '</span><span class="s2">🍮</span><span class="s1"> Раф',                        unit: 'пачек по 1 кг' },</span></p>
+<p class="p1"><span class="s1">    { key: 'sugar',     name: '</span><span class="s2">🍬</span><span class="s1"> Сахар',                      unit: 'коробок' },</span></p>
+<p class="p1"><span class="s1">    { key: 'cups',      name: '</span><span class="s2">🥤</span><span class="s1"> Стаканы',                    unit: 'коробок' },</span></p>
+<p class="p1"><span class="s1">    { key: 'lids',      name: '</span><span class="s2">🧢</span><span class="s1"> Крышки',                     unit: 'коробок' },</span></p>
+<p class="p1"><span class="s1">    { key: 'sticks',    name: '</span><span class="s2">🥄</span><span class="s1"> Палочки для размешивания',   unit: 'упаковок' },</span></p>
+<p class="p1"><span class="s1">    { key: 'water',     name: '</span><span class="s2">💧</span><span class="s1"> Вода',                       unit: 'бутылей 19 л' }</span></p>
+<p class="p1"><span class="s1">  ];</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  let points = JSON.parse(localStorage.getItem('vendingPoints') || '[]');</span></p>
+<p class="p1"><span class="s1">  let editing = { pointId: null, ingKey: null };</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function save() {</span></p>
+<p class="p1"><span class="s1">    localStorage.setItem('vendingPoints', JSON.stringify(points));</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function addPoint() {</span></p>
+<p class="p1"><span class="s1">    const input = document.getElementById('newPointName');</span></p>
+<p class="p1"><span class="s1">    const name = input.value.trim();</span></p>
+<p class="p1"><span class="s1">    if (!name) {</span></p>
+<p class="p1"><span class="s1">      alert('Введите название точки');</span></p>
+<p class="p1"><span class="s1">      return;</span></p>
+<p class="p1"><span class="s1">    }</span></p>
+<p class="p1"><span class="s1">    const newPoint = {</span></p>
+<p class="p1"><span class="s1">      id: Date.now(),</span></p>
+<p class="p1"><span class="s1">      name: name,</span></p>
+<p class="p1"><span class="s1">      ingredients: {}</span></p>
+<p class="p1"><span class="s1">    };</span></p>
+<p class="p1"><span class="s1">    INGREDIENTS.forEach(ing =&gt; {</span></p>
+<p class="p1"><span class="s1">      newPoint.ingredients[ing.key] = { qty: 0, date: '' };</span></p>
+<p class="p1"><span class="s1">    });</span></p>
+<p class="p1"><span class="s1">    points.push(newPoint);</span></p>
+<p class="p1"><span class="s1">    input.value = '';</span></p>
+<p class="p1"><span class="s1">    save();</span></p>
+<p class="p1"><span class="s1">    render();</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function deletePoint(id) {</span></p>
+<p class="p1"><span class="s1">    if (confirm('Удалить точку?')) {</span></p>
+<p class="p1"><span class="s1">      points = points.filter(p =&gt; p.id !== id);</span></p>
+<p class="p1"><span class="s1">      save();</span></p>
+<p class="p1"><span class="s1">      render();</span></p>
+<p class="p1"><span class="s1">    }</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function openModal(pointId, ingKey) {</span></p>
+<p class="p1"><span class="s1">    editing = { pointId, ingKey };</span></p>
+<p class="p1"><span class="s1">    const point = points.find(p =&gt; p.id === pointId);</span></p>
+<p class="p1"><span class="s1">    const ing = INGREDIENTS.find(i =&gt; i.key === ingKey);</span></p>
+<p class="p1"><span class="s1">    document.getElementById('modalTitle').textContent = ing.name;</span></p>
+<p class="p1"><span class="s1">    document.getElementById('modalQty').value = point.ingredients[ingKey].qty || 0;</span></p>
+<p class="p1"><span class="s1">    document.getElementById('modalDate').value = point.ingredients[ingKey].date || new Date().toISOString().slice(0,10);</span></p>
+<p class="p1"><span class="s1">    document.getElementById('editModal').classList.add('show');</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function closeModal() {</span></p>
+<p class="p1"><span class="s1">    document.getElementById('editModal').classList.remove('show');</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function saveEdit() {</span></p>
+<p class="p1"><span class="s1">    const point = points.find(p =&gt; p.id === editing.pointId);</span></p>
+<p class="p1"><span class="s1">    const qty = parseInt(document.getElementById('modalQty').value) || 0;</span></p>
+<p class="p1"><span class="s1">    const date = document.getElementById('modalDate').value;</span></p>
+<p class="p1"><span class="s1">    point.ingredients[editing.ingKey] = { qty, date };</span></p>
+<p class="p1"><span class="s1">    save();</span></p>
+<p class="p1"><span class="s1">    closeModal();</span></p>
+<p class="p1"><span class="s1">    render();</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function getDaysSince(dateStr) {</span></p>
+<p class="p1"><span class="s1">    if (!dateStr) return null;</span></p>
+<p class="p1"><span class="s1">    const today = new Date();</span></p>
+<p class="p1"><span class="s1">    today.setHours(0,0,0,0);</span></p>
+<p class="p1"><span class="s1">    const d = new Date(dateStr);</span></p>
+<p class="p1"><span class="s1">    d.setHours(0,0,0,0);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">return Math.floor((today - d) / (1000*60*60*24));</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function getStatus(days) {</span></p>
+<p class="p1"><span class="s1">    if (days === null) return { cls: '', label: 'нет данных', tag: '' };</span></p>
+<p class="p1"><span class="s1">    if (days &lt; 3) return { cls: 'ok', label: 'нормально', tag: 'status-ok' };</span></p>
+<p class="p1"><span class="s1">    if (days &lt;= 7) return { cls: 'soon', label: 'скоро подвозить', tag: 'status-soon' };</span></p>
+<p class="p1"><span class="s1">    return { cls: 'urgent', label: 'срочно!', tag: 'status-urgent' };</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function render() {</span></p>
+<p class="p1"><span class="s1">    const container = document.getElementById('pointsList');</span></p>
+<p class="p1"><span class="s1">    if (points.length === 0) {</span></p>
+<p class="p1"><span class="s1">      container.innerHTML = `</span></p>
+<p class="p1"><span class="s1">        &lt;div class="empty-state"&gt;</span></p>
+<p class="p1"><span class="s1">          &lt;span&gt;</span><span class="s2">📍</span><span class="s1">&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1">          &lt;p&gt;Нет добавленных точек.&lt;br&gt;Добавьте первую точку выше </span><span class="s2">☝️</span><span class="s1">&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;/div&gt;`;</span></p>
+<p class="p1"><span class="s1">      return;</span></p>
+<p class="p1"><span class="s1">    }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">    container.innerHTML = points.map(point =&gt; `</span></p>
+<p class="p1"><span class="s1">      &lt;div class="point-card"&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;div class="point-header"&gt;</span></p>
+<p class="p1"><span class="s1">          &lt;div class="point-name"&gt;</span><span class="s2">📍</span><span class="s1"> ${point.name}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">          &lt;button class="btn-danger btn-small" onclick="deletePoint(${point.id})"&gt;Удалить&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">        &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">        ${INGREDIENTS.map(ing =&gt; {</span></p>
+<p class="p1"><span class="s1">          const data = point.ingredients[ing.key] || { qty: 0, date: '' };</span></p>
+<p class="p1"><span class="s1">          const days = getDaysSince(data.date);</span></p>
+<p class="p1"><span class="s1">          const status = getStatus(days);</span></p>
+<p class="p1"><span class="s1">          const dateStr = data.date ? new Date(data.date).toLocaleDateString('ru-RU') : '—';</span></p>
+<p class="p1"><span class="s1">          const daysStr = days !== null ? `${days} дн. назад` : 'не указано';</span></p>
+<p class="p1"><span class="s1">          return `</span></p>
+<p class="p1"><span class="s1">            &lt;div class="ingredient ${status.cls}"&gt;</span></p>
+<p class="p1"><span class="s1">              &lt;div class="ing-info"&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;div class="ing-name"&gt;${ing.name}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                &lt;div class="ing-details"&gt;</span></p>
+<p class="p1"><span class="s1">                  ${data.qty} ${ing.unit} • поставка: ${dateStr} (${daysStr})</span></p>
+<p class="p1"><span class="s1">                &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">                ${data.date ? `&lt;span class="ing-status ${status.tag}"&gt;${status.label}&lt;/span&gt;` : ''}</span></p>
+<p class="p1"><span class="s1">              &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">              &lt;button class="edit-btn" onclick="openModal(${point.id}, '${ing.key}')"&gt;</span><span class="s2">✏️</span><span class="s1">&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">            &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">          `;</span></p>
+<p class="p1"><span class="s1">        }).join('')}</span></p>
+<p class="p1"><span class="s1">      &lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">    `).join('');</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  function resetAll() {</span></p>
+<p class="p1"><span class="s1">    if (confirm('</span><span class="s2">⚠️</span><span class="s1"> Точно сбросить ВСЕ данные? Это действие нельзя отменить!')) {</span></p>
+<p class="p1"><span class="s1">      if (confirm('Вы уверены? Все точки и поставки будут удалены.')) {</span></p>
+<p class="p1"><span class="s1">        points = [];</span></p>
+<p class="p1"><span class="s1">        localStorage.removeItem('vendingPoints');</span></p>
+<p class="p1"><span class="s1">        render();</span></p>
+<p class="p1"><span class="s1">      }</span></p>
+<p class="p1"><span class="s1">    }</span></p>
+<p class="p1"><span class="s1">  }</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  // Закрытие модалки по клику вне окна</span></p>
+<p class="p1"><span class="s1">  document.getElementById('editModal').addEventListener('click', (e) =&gt; {</span></p>
+<p class="p1"><span class="s1">    if (e.target.id === 'editModal') closeModal();</span></p>
+<p class="p1"><span class="s1">  });</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">  render();</span></p>
+<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
 </body>
 </html>
